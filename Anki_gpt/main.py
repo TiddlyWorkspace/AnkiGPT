@@ -3,7 +3,6 @@ import os
 import shutil
 import atexit
 from openai.error import OpenAIError
-
 from components.sidebar import sidebar
 from utils import (
     embed_docs,
@@ -13,7 +12,6 @@ from utils import (
     parse_txt,
     search_docs,
     text_to_docs,
-    
 )
 from prompts import chat_prompt
 import pandas as pd
@@ -26,9 +24,6 @@ st.header("📇AnkiGPT")
 
 def clear_submit():
     st.session_state["submit"] = False
-
-
-
 
 sidebar()
 
@@ -52,27 +47,18 @@ if uploaded_file is not None:
         raise ValueError("File type not supported!")
     text = text_to_docs(doc)
 
-    # with st.expander("If you uploaded another file please hit yes"):
-    #     change = st.checkbox("yes")
     try:
         with st.spinner("Indexing document... This may take a while⏳"):
-          
             index = embed_docs(text,change_doc=uploaded_file.name)
         st.session_state["api_key_configured"] = True
     except OpenAIError as e:
         st.error(e._message)
 
-# st.write(doc)
-# st.write(text)
-# st.write(index)
 query = st.text_input("Write the subject you want flashcards for", on_change=clear_submit)
-# st.write(query)
+
 with st.expander("Advanced Options"):
     show_flashcards = st.checkbox("Show the question, answer flashcards")
     show_source = st.checkbox("Show the source of flashcards")
-# sources = search_docs(index, query)
-# st.write(sources)
-
 
 button = st.button("Submit")
 if button or st.session_state.get("submit"):
@@ -87,7 +73,6 @@ if button or st.session_state.get("submit"):
         # Output Columns
         answer_col, sources_col = st.columns(2)
         sources = search_docs(index, query)
-  
     
         try:
             if show_source:
@@ -114,16 +99,15 @@ if button or st.session_state.get("submit"):
             if not os.path.exists('.tmp'):
                 os.mkdir('.tmp')
 
-            with open(f'.tmp/{query}.csv', 'w', newline='') as file:
+            with open(f'.tmp/{query}.csv', 'w', newline='', encoding='utf-8') as file:
                 writer = csv.writer(file)
                 writer.writerow([ 'Question', 'Answer'])
                 writer.writerows(data)
 
             # Create a download link for your CSV file
-            data = pd.read_csv(f".tmp/{query}.csv")
+            data = pd.read_csv(f".tmp/{query}.csv", encoding='utf-8')
             csvfile = data.to_csv(header=False,index=False)
-            encoded_csvfile = csvfile.encode('utf_8', errors='ignore')
-            b64 = base64.b64encode(encoded_csvfile).decode()
+            b64 = base64.b64encode(csvfile.encode()).decode()
             href = f'<a href="data:file/csv;base64,{b64}" download="{query}.csv">Download CSV file</a>'
             st.markdown(href, unsafe_allow_html=True)
 
